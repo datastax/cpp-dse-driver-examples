@@ -25,11 +25,13 @@ location of your dependencies:
 
 ## Dependencies
 
-* cmake (>= 2.6.4)
+* [cmake]  (>= 2.6.4)
 * C/C++ DataStax Enterprise Driver (it can be downloaded from our [downloads
   site])
-* Libuv (also required by the driver and can also be download from our
+* [libuv] (also required by the driver and can also be download from our
   [downloads site])
 
 [documentation site]: https://docs.datastax.com/en/developer/cpp-driver-dse/latest
 [downloads site]: https://downloads.datastax.com/cpp-driver
+[libuv]: https://github.com/libuv/libuv
+[cmake]: https://cmake.org
