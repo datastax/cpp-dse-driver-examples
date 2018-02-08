@@ -1,8 +1,9 @@
 # C/C++ DataStax Enterprise Driver Examples
 
-Examples for using the C/C++ DataStax Enterprise driver. The [`dse`](dse)
-directory contains examples for DataStax Enterprise specific functionality and
-the [`core`](core) includes examples for general functionality.
+Examples for using the C/C++ DataStax Enterprise driver. The
+[`dse`](dse/examples) directory contains examples for DataStax Enterprise
+specific functionality and the [`core`](core/examples) includes examples for
+general functionality.
 
 ## Documentation
 
