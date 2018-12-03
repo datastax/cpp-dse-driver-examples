@@ -1,0 +1,22 @@
+schedules:
+  adhoc:
+    schedule: adhoc
+    notify:
+      slack: cpp-driver-dev-bots
+  commit:
+    schedule: per_commit
+    notify:
+      slack: cpp-driver-dev-bots
+architecture:
+  - x64
+os:
+  - ubuntu/bionic64/cpp
+  - ubuntu/trusty64/cpp
+  - ubuntu/xenial64/cpp
+  - centos/6-64/cpp
+  - centos/7-64/cpp
+build:
+  - script: |
+      . .build.sh
+      install_dependencies
+      build_examples
