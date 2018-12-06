@@ -23,6 +23,14 @@ location of your dependencies:
 
 * `LIBDSE_ROOT_DIR`
 * `LIBUV_ROOT_DIR`
+* `OPENSSL_ROOT_DIR`
+
+Dependencies may also be located in a `lib` directory at the project root to
+remove the need of specifying dependency root directories:
+
+* `lib/dse` - C/C++ DataStax Enterprise Driver
+* `lib/libuv` - Libuv
+* `lib/openssl` - OpenSSL
 
 ## Dependencies
 
@@ -31,8 +39,11 @@ location of your dependencies:
   site])
 * [libuv] (also required by the driver and can also be download from our
   [downloads site])
+* [openssl] (also required by the driver and can also be download from our
+  [downloads site] for Windows only)
 
 [documentation site]: https://docs.datastax.com/en/developer/cpp-driver-dse/latest
 [downloads site]: https://downloads.datastax.com/cpp-driver
 [libuv]: https://github.com/libuv/libuv
+[openssl]: https://github.com/openssl/openssl
 [cmake]: https://cmake.org
