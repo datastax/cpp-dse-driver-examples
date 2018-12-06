@@ -1,0 +1,42 @@
+skip_commits:
+  files:
+    - '**/*.md'
+    - '**/build.yaml'
+    - '**/.build.sh'
+    - '**/.gitignore'
+shallow_clone: false
+platform:
+  - x86
+  - x64
+environment:
+  APPVEYOR_BUILD_WORKER_CLOUD: gce
+  matrix:
+    - CMAKE_GENERATOR: Visual Studio 10 2010
+      VISUAL_STUDIO_INTERNAL_VERSION: 100
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+    - CMAKE_GENERATOR: Visual Studio 11 2012
+      VISUAL_STUDIO_INTERNAL_VERSION: 110
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+    - CMAKE_GENERATOR: Visual Studio 12 2013
+      VISUAL_STUDIO_INTERNAL_VERSION: 120
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+    - CMAKE_GENERATOR: Visual Studio 14 2015
+      VISUAL_STUDIO_INTERNAL_VERSION: 140
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    - CMAKE_GENERATOR: Visual Studio 15 2017
+      VISUAL_STUDIO_INTERNAL_VERSION: 141
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+#init:
+#  - ps: iex ((New-Object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+install:
+  - ps: . .\appveyor.ps1 # Source AppVeyor build functions
+  - ps: Build-Configuration-Information
+  - ps: Hardware-Information
+  - ps: Environment-Information
+  - ps: Install-Examples-Environment
+build_script:
+  - ps: Build-Examples
+  - ps: Build-Configuration-Information
+  - ps: Hardware-Information
+  - ps: Environment-Information
+#  - ps: $blockRdp = $True; iex ((New-Object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
