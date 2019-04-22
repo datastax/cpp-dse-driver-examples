@@ -25,14 +25,17 @@
   For more information, please refer to <http://unlicense.org/>
 */
 
-#include <assert.h>
-#include <string.h>
+#include <cassandra.h>
+
+
 #include <stdio.h>
-#include <stdlib.h>
+#include <uv.h>
 
-#include "cassandra.h"
+void on_signal(uv_signal_t* handle, int signum) {
+  uv_signal_stop(handle);
+}
 
-#define NUM_CONCURRENT_REQUESTS 1000
+void on_host_listener(CassHostListenerEvent event, CassInet inet, void* data);
 
 void print_error(CassFuture* future) {
   const char* message;
@@ -41,10 +44,11 @@ void print_error(CassFuture* future) {
   fprintf(stderr, "Error: %.*s\n", (int)message_length, message);
 }
 
-
 CassCluster* create_cluster(const char* hosts) {
   CassCluster* cluster = cass_cluster_new();
+  cass_log_set_level(CASS_LOG_DISABLED);
   cass_cluster_set_contact_points(cluster, hosts);
+  cass_cluster_set_host_listener_callback(cluster, on_host_listener, NULL);
   return cluster;
 }
 
@@ -62,61 +66,18 @@ CassError connect_session(CassSession* session, const CassCluster* cluster) {
   return rc;
 }
 
-CassError execute_query(CassSession* session, const char* query) {
-  CassError rc = CASS_OK;
-  CassFuture* future = NULL;
-  CassStatement* statement = cass_statement_new(query, 0);
+void on_host_listener(CassHostListenerEvent event, CassInet inet, void* data) {
+  char address[CASS_INET_STRING_LENGTH];
 
-  future = cass_session_execute(session, statement);
-  cass_future_wait(future);
-
-  rc = cass_future_error_code(future);
-  if (rc != CASS_OK) {
-    print_error(future);
-  }
-
-  cass_future_free(future);
-  cass_statement_free(statement);
-
-  return rc;
-}
-
-void insert_into_async(CassSession* session, const char* key) {
-  CassError rc = CASS_OK;
-  CassStatement* statement = NULL;
-  const char* query = "INSERT INTO async (key, bln, flt, dbl, i32, i64) VALUES (?, ?, ?, ?, ?, ?);";
-
-  CassFuture* futures[NUM_CONCURRENT_REQUESTS];
-
-  size_t i;
-  for (i = 0; i < NUM_CONCURRENT_REQUESTS; ++i) {
-     char key_buffer[64];
-    statement = cass_statement_new(query, 6);
-
-    sprintf(key_buffer, "%s%u", key, (unsigned int)i);
-    cass_statement_bind_string(statement, 0, key_buffer);
-    cass_statement_bind_bool(statement, 1, i % 2 == 0 ? cass_true : cass_false);
-    cass_statement_bind_float(statement, 2, i / 2.0f);
-    cass_statement_bind_double(statement, 3, i / 200.0);
-    cass_statement_bind_int32(statement, 4, (cass_int32_t)(i * 10));
-    cass_statement_bind_int64(statement, 5, (cass_int64_t)(i * 100));
-
-    futures[i] = cass_session_execute(session, statement);
-
-    cass_statement_free(statement);
-  }
-
-  for (i = 0; i < NUM_CONCURRENT_REQUESTS; ++i) {
-    CassFuture* future = futures[i];
-
-    cass_future_wait(future);
-
-    rc = cass_future_error_code(future);
-    if (rc != CASS_OK) {
-      print_error(future);
-    }
-
-    cass_future_free(future);
+  cass_inet_string(inet, address);
+  if (event == CASS_HOST_LISTENER_EVENT_ADD) {
+    printf("Host %s has been ADDED\n", address);
+  } else if (event == CASS_HOST_LISTENER_EVENT_REMOVE) {
+    printf("Host %s has been REMOVED\n", address);
+  } else if (event == CASS_HOST_LISTENER_EVENT_UP) {
+    printf("Host %s is UP\n", address);
+  } else if (event == CASS_HOST_LISTENER_EVENT_DOWN) {
+    printf("Host %s is DOWN\n", address);
   }
 }
 
@@ -124,9 +85,12 @@ int main(int argc, char* argv[]) {
   CassCluster* cluster = NULL;
   CassSession* session = cass_session_new();
   char* hosts = "127.0.0.1";
+  uv_loop_t loop;
+  uv_signal_t signal;
   if (argc > 1) {
     hosts = argv[1];
   }
+
   cluster = create_cluster(hosts);
 
   if (connect_session(session, cluster) != CASS_OK) {
@@ -135,21 +99,12 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  execute_query(session,
-                "CREATE KEYSPACE examples WITH replication = { \
-                           'class': 'SimpleStrategy', 'replication_factor': '3' };");
-
-
-  execute_query(session,
-                "CREATE TABLE examples.async (key text, \
-                                              bln boolean, \
-                                              flt float, dbl double,\
-                                              i32 int, i64 bigint, \
-                                              PRIMARY KEY (key));");
-
-  execute_query(session, "USE examples");
-
-  insert_into_async(session, "test");
+  uv_loop_init(&loop);
+  uv_signal_init(&loop, &signal);
+  uv_signal_start(&signal, on_signal, SIGINT);
+  fprintf(stderr, "Press CTRL+C to exit ...\n");
+  uv_run(&loop, UV_RUN_DEFAULT);
+  uv_loop_close(&loop);
 
   cass_cluster_free(cluster);
   cass_session_free(session);
