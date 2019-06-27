@@ -26,7 +26,7 @@ Function Get-Latest-Version ($Url) {
 }
 
 Function Build-Configuration-Information {
-  $downloads_url_prefix = "http://downloads.datastax.com/cpp-driver/windows"
+  $downloads_url_prefix = "https://downloads.datastax.com/cpp-driver/windows"
   $dependencies_url_prefix = "$($downloads_url_prefix)/dependencies"
 
   # Gather dependency versions
